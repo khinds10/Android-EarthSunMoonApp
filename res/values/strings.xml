@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Earth, Sun and Moon</string>
+    <string name="title_section1">Earth</string>
+    <string name="title_section2">Sun</string>
+    <string name="title_section3">Moon</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
+
+    <string-array name="earth_views_array">
+        <item>Earth from the Sun</item>
+        <item>Earth from the Moon</item>
+        <item>Day and Night across the Earth</item>
+        <item>Earth from the North Pole</item>
+        <item>Earth from the South Pole</item>
+    </string-array>
+    
+    <string-array name="sun_views_array">
+        <item>AIA 193 - Current Outer Atmosphere</item>
+        <item>AIA 304 - Current Plasma Filaments &amp; Prominences</item>
+        <item>AIA 171 - Current Magnetic Coronal Loops</item>
+        <item>AIA 211 - Sun\'s Current Corona</item>
+        <item>AIA 131 - Current Solar Flares</item>
+        <item>AIA 335 - Current Most Active Outer Atmosphere</item>
+        <item>AIA 094 - Current Extremely Hot Regions ~6 million Kelvin</item>
+        <item>AIA 1600 - Current Magnetic Fields Concentration</item>
+        <item>AIA 1700 - Current Magnetic Fields Bundles (appear black)</item>
+        <item>AIA  Composite - Current Corona, Atmosphere, Magentic Loops</item>
+        <item>AIA Composite - Plasma Filaments, Corona, Magentic Loops </item>
+        <item>AIA Composite - Extremely Hot, Most Active Atmosphere &amp; Atmosphere </item>
+    </string-array>
+    
+    <string-array name="sun_views_array_urls">
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0211.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0131.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0335.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0094.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_1600.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_1700.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/f_211_193_171_512.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/f_304_211_171_512.jpg</item>
+        <item>http://sdo.gsfc.nasa.gov/assets/img/latest/f_094_335_193_512.jpg</item>
+    </string-array>
+
+</resources>
