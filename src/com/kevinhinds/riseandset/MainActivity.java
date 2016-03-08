@@ -2,6 +2,7 @@ package com.kevinhinds.riseandset;
 
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
+import android.util.TypedValue;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,11 +11,15 @@ import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,6 +27,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -63,11 +70,25 @@ public class MainActivity extends ActionBarActivity {
 	public ArrayList<String> astroData;
 	private URL usnoURL;
 	private URL forcastURL;
+	protected String currentLanguageCode;
+	protected String currentCountryCode;
+	protected boolean useCelsius = true;
+	protected String finalAddress;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		// get current language code
+		currentLanguageCode = getResources().getConfiguration().locale.getLanguage();
+		currentCountryCode = getResources().getConfiguration().locale.getCountry();
+
+		// set the variable if we need to NOT use celsius
+		String[] nonCelsiusCountries = { "BS", "BZ", "KY", "PW", "US", "PR", "GU", "VI" };
+		if (Arrays.asList(nonCelsiusCountries).contains(currentCountryCode)) {
+			useCelsius = false;
+		}
 
 		// handle the spinner for the earth view changer
 		Spinner earthViewsSpinner = (Spinner) findViewById(R.id.earthViewsSpinner);
@@ -120,6 +141,7 @@ public class MainActivity extends ActionBarActivity {
 	 * get current location of the user
 	 */
 	protected void getCurrentLocation() {
+
 		// Acquire a reference to the system Location Manager
 		LocationManager locationManager = (LocationManager) this.getSystemService(MainActivity.LOCATION_SERVICE);
 
@@ -215,12 +237,31 @@ public class MainActivity extends ActionBarActivity {
 		}
 		new GetAstroDataTask().execute(usnoURL);
 
-		// get USNO URL and background task to obtain the data
+		// get current forecast and estimated location
 		forcastURL = null;
 		try {
-			int latWeatherDegrees = Integer.parseInt(lat_sign) * Integer.parseInt(lat_deg);
-			int lonWeatherDegrees = Integer.parseInt(lon_sign) * Integer.parseInt(lon_deg);
-			forcastURL = new URL("http://weather.api.kevinhinds.net/?lat=" + latWeatherDegrees + "&lon=" + lonWeatherDegrees);
+
+			forcastURL = new URL("http://weather.api.kevinhinds.net/?lat=" + currentLocation.getLatitude() + "&lon=" + currentLocation.getLongitude() + "&lang=" + currentLanguageCode);
+
+			// get current user address
+			Geocoder geoCoder = new Geocoder(this, Locale.getDefault());
+			StringBuilder builder = new StringBuilder();
+			List<Address> address = geoCoder.getFromLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), 1);
+			int maxLines = address.get(0).getMaxAddressLineIndex();
+			for (int i = 0; i < maxLines; i++) {
+				String addressStr = address.get(0).getAddressLine(i);
+				builder.append(addressStr);
+				builder.append(" ");
+			}
+			finalAddress = builder.toString();
+			TextView sunAddressLine = (TextView) findViewById(R.id.sunAddressLine);
+			sunAddressLine.setText(finalAddress);
+
+			TextView earthAddressLine = (TextView) findViewById(R.id.earthAddressLine);
+			earthAddressLine.setText(finalAddress);
+
+			TextView moonAddressLine = (TextView) findViewById(R.id.moonAddressLine);
+			moonAddressLine.setText(finalAddress);
 		} catch (Exception e1) {
 		}
 		new GetWeatherDataTask().execute(forcastURL);
@@ -263,48 +304,133 @@ public class MainActivity extends ActionBarActivity {
 
 			try {
 				JSONObject weatherReader = new JSONObject(weatherOutput);
-
 				JSONObject currently = (JSONObject) weatherReader.get("currently");
 				String currentlySummary = (String) currently.get("summary");
 
-				JSONObject minutely = (JSONObject) weatherReader.get("minutely");
-				String minutelySummary = (String) minutely.get("summary");
+				// temp and apparent temp
+				completeForecast = "Temp: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("temperature").toString()));
+				completeForecast = completeForecast + " / Feels Like: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("apparentTemperature").toString()));
 
-				JSONObject hourly = (JSONObject) weatherReader.get("hourly");
-				String hourlySummary = (String) hourly.get("summary");
+				// humidity and dew point
+				Double humidity = (double) Math.round(Double.parseDouble(currently.get("humidity").toString()) * 100);
+				completeForecast = completeForecast + "\n\nHumidity: " + Double.toString(humidity) + "%";
+				completeForecast = completeForecast + " / Dew Point: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("dewPoint").toString()));
 
-				JSONObject daily = (JSONObject) weatherReader.get("daily");
-				String dailySummary = (String) daily.get("summary");
-				completeForecast = currentlySummary + " / " + minutelySummary + " \n\n" + dailySummary;
+				// wind speed and bearing
+				completeForecast = completeForecast + "\n\nWind Speed: " + convertMPHtoCelcius(Double.parseDouble(currently.get("windSpeed").toString()));
+				completeForecast = completeForecast + " / Bearing: " + convertDegreesToDirection(Double.parseDouble(currently.get("windBearing").toString()));
 
-				// currently.get("windBearing")
+				// cloud cover
+				Double cloudCover = (double) Math.round(Double.parseDouble(currently.get("cloudCover").toString()) * 100);
+				completeForecast = completeForecast + " \n\nCloud Cover: " + Double.toString(cloudCover) + "%";
 
-				// "temperature":44.09, (* F) DOUBLE
+				// pressure and ozone
+				completeForecast = completeForecast + "\n\nAir Pressure: " + Double.parseDouble(currently.get("pressure").toString());
+				completeForecast = completeForecast + " / Ozone (O3): " + Double.parseDouble(currently.get("ozone").toString());
 
-				// "apparentTemperature":38.61, (* F) DOUBLE
+				// get minutely summary, catch if missing
+				String minutelySummary = "";
+				try {
+					JSONObject minutely = (JSONObject) weatherReader.get("minutely");
+					minutelySummary = (String) minutely.get("summary");
+				} catch (Exception e) {
+				}
 
-				// "dewPoint":28.57, (* F) DOUBLE
+				// get hourly summary, catch if missing
+				String hourlySummary = "";
+				try {
+					JSONObject hourly = (JSONObject) weatherReader.get("hourly");
+					hourlySummary = (String) hourly.get("summary");
+				} catch (Exception e) {
+				}
 
-				// "humidity":0.54, (%) DOUBLE
-
-				// "windSpeed":10.25, MPH DOUBLE
-
-				// "windBearing":283, INT - PARSE DOUBLE?
-
-				// "visibility":9.98, Miles INT - PARSE DOUBLE?
-
-				// "cloudCover":0.07, % DOUBLE
-
-				// "pressure":1016.75, (mb) - don't convert DOUBLE
-
-				// "ozone (O3)":334.93 (DU) - don't convert DOUBLE
+				// get daily summary, catch if missing
+				String dailySummary = "";
+				try {
+					JSONObject daily = (JSONObject) weatherReader.get("daily");
+					dailySummary = (String) daily.get("summary");
+				} catch (Exception e) {
+				}
+				completeForecast = completeForecast + "\n\n" + currentlySummary + " \n\n" + minutelySummary + " \n\n" + hourlySummary + " \n\n" + dailySummary;
 
 			} catch (Exception e) {
 				String kevin = "kevin";
-
 			}
-
 			return null;
+		}
+
+		/**
+		 * convert the current bearning angle to compass direction
+		 * 
+		 * @param windBearing
+		 * @return
+		 */
+		private String convertDegreesToDirection(Double windBearing) {
+			if (windBearing > 348.75 || windBearing <= 11.25) {
+				return "N";
+			}
+			if (windBearing > 11.25 && windBearing <= 33.75) {
+				return "NNE";
+			}
+			if (windBearing > 33.75 && windBearing <= 56.25) {
+				return "NE";
+			}
+			if (windBearing > 56.25 && windBearing <= 78.75) {
+				return "ENE";
+			}
+			if (windBearing > 78.75 && windBearing <= 101.25) {
+				return "E";
+			}
+			if (windBearing > 101.25 && windBearing <= 123.75) {
+				return "ESE";
+			}
+			if (windBearing > 123.75 && windBearing <= 146.25) {
+				return "SE";
+			}
+			if (windBearing > 146.25 && windBearing <= 168.75) {
+				return "SSE";
+			}
+			if (windBearing > 168.75 && windBearing <= 191.25) {
+				return "S";
+			}
+			if (windBearing > 191.25 && windBearing <= 213.75) {
+				return "SSW";
+			}
+			if (windBearing > 213.75 && windBearing <= 236.25) {
+				return "SW";
+			}
+			if (windBearing > 236.25 && windBearing <= 258.75) {
+				return "WSW";
+			}
+			if (windBearing > 258.75 && windBearing <= 281.25) {
+				return "W";
+			}
+			if (windBearing > 281.25 && windBearing <= 303.75) {
+				return "WNW";
+			}
+			if (windBearing > 303.75 && windBearing <= 326.25) {
+				return "NW";
+			}
+			if (windBearing > 326.25 && windBearing <= 348.75) {
+				return "NNW";
+			}
+			return null;
+		}
+
+		// Converts to celcius unless the flag is set otherwise
+		private String convertMPHtoCelcius(Double mph) {
+			if (!useCelsius) {
+				return Double.toString(Math.round(mph)) + " mph";
+			}
+			return Double.toString(Math.round(mph * 1.609344)) + " kph";
+		}
+
+		// Converts to celcius unless the flag is set otherwise
+		private String convertFahrenheitToCelcius(Double fahrenheit) {
+			if (!useCelsius) {
+				return Double.toString(Math.round(fahrenheit)) + " *F";
+			}
+			return Double.toString(Math.round(((fahrenheit - 32) * 5 / 9))) + " *C";
 		}
 	}
 
@@ -330,30 +456,100 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	/**
-	 * spinner onclick listener for the earth views
+	 * spinner onclick listener for the earth views with position zero being the NASA Epic camera
+	 * image
 	 * 
 	 * @author khinds
 	 */
 	public class CustomOnItemSelectedListenerEarth implements OnItemSelectedListener {
 		public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-			String whichEarthViewSelected = parent.getItemAtPosition(pos).toString();
-			String imageName = "earth_sun";
-			if (whichEarthViewSelected.equals("Earth from the Sun")) {
-				imageName = "earth_sun";
-			} else if (whichEarthViewSelected.equals("Earth from the Moon")) {
-				imageName = "earth_moon";
-			} else if (whichEarthViewSelected.equals("Day and Night across the Earth")) {
-				imageName = "day_night";
-			} else if (whichEarthViewSelected.equals("Earth from the North Pole")) {
-				imageName = "earth_north";
-			} else if (whichEarthViewSelected.equals("Earth from the South Pole")) {
-				imageName = "earth_south";
+			ImageView earthView = (ImageView) findViewById(R.id.earthView);
+			if (pos == 0) {
+				URL epicURL = null;
+				try {
+					epicURL = new URL("http://epic.gsfc.nasa.gov/api/images.php");
+					new GetEpicImagesDataTask().execute(epicURL);
+
+					// enlarge the earth image because of black margin difference
+					int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 275, getResources().getDisplayMetrics());
+					earthView.getLayoutParams().height = height;
+
+				} catch (Exception e) {
+				}
+				new GetEpicImagesDataTask().execute(epicURL);
+			} else {
+
+				// resize the earth image because of black margin difference
+				int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 275, getResources().getDisplayMetrics());
+				earthView.getLayoutParams().height = height;
+
+				String whichEarthViewSelected = parent.getItemAtPosition(pos).toString();
+				String imageName = "earth_sun";
+				if (whichEarthViewSelected.equals("Earth from the Sun")) {
+					imageName = "earth_sun";
+				} else if (whichEarthViewSelected.equals("Earth from the Moon")) {
+					imageName = "earth_moon";
+				} else if (whichEarthViewSelected.equals("Day and Night across the Earth")) {
+					imageName = "day_night";
+				} else if (whichEarthViewSelected.equals("Earth from the North Pole")) {
+					imageName = "earth_north";
+				} else if (whichEarthViewSelected.equals("Earth from the South Pole")) {
+					imageName = "earth_south";
+				}
+				getPlanetImageByName(imageName);
 			}
-			getPlanetImageByName(imageName);
+
 		}
 
 		@Override
 		public void onNothingSelected(AdapterView<?> arg0) {
+		}
+	}
+
+	/**
+	 * get the most recent NASA Epic Image and display it for the earth image
+	 * 
+	 * @author khinds
+	 */
+	private class GetEpicImagesDataTask extends AsyncTask<URL, Integer, Long> {
+
+		private String epicOutput;
+
+		protected void onProgressUpdate(Integer... progress) {
+		}
+
+		protected void onPostExecute(Long result) {
+			TextView currentForecast = (TextView) findViewById(R.id.currentForecast);
+			currentForecast.setText(completeForecast);
+		}
+
+		@Override
+		protected Long doInBackground(URL... params) {
+			try {
+				URLConnection conn = params[0].openConnection();
+				BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				String inputLine;
+				epicOutput = "";
+				while ((inputLine = br.readLine()) != null) {
+					epicOutput = epicOutput + inputLine;
+				}
+				br.close();
+			} catch (Exception e) {
+			}
+			try {
+				// get NASA DSCOVR::EPIC Image from available list by webservice call
+				JSONArray epicImageImages = new JSONArray(epicOutput);
+				JSONObject epicImage = (JSONObject) epicImageImages.get(epicImageImages.length() - 2);
+				String recentEpicImage = (String) epicImage.get("image");
+				URL epicImageURL = null;
+				try {
+					epicImageURL = new URL("http://epic.gsfc.nasa.gov/epic-archive/jpg/" + recentEpicImage + ".jpg");
+				} catch (Exception e) {
+				}
+				new GetEarthImagesTask().execute(epicImageURL);
+			} catch (Exception e) {
+			}
+			return null;
 		}
 	}
 

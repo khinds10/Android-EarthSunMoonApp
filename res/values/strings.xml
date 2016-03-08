@@ -10,6 +10,7 @@
     <string name="action_settings">Settings</string>
 
     <string-array name="earth_views_array">
+        <item>Most Recent DSCOVR:EPIC Image</item>
         <item>Earth from the Sun</item>
         <item>Earth from the Moon</item>
         <item>Day and Night across the Earth</item>
