@@ -536,6 +536,8 @@
                     android:textSize="11sp"
                     android:typeface="monospace" />
 
+                <!-- ********************************************* CURRENT LOCATION DETAILS **************************************************** -->
+
                 <TextView
                     android:id="@+id/currentLocationTitle"
                     android:layout_width="wrap_content"

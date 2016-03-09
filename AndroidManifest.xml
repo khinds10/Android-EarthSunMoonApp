@@ -28,6 +28,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <receiver
+            android:name=".widget.MoonWidget"
+            android:label="Live Moon" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/moon_widget_provider" />
+        </receiver>
+        
+        <!-- Service to perform web API queries -->
+        <service android:name=".widget.UpdateService" />
+        
     </application>
 
 </manifest>

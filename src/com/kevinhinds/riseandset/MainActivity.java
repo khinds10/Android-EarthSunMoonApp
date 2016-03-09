@@ -2,6 +2,7 @@ package com.kevinhinds.riseandset;
 
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
 import java.io.BufferedReader;
@@ -11,14 +12,9 @@ import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -26,11 +22,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -43,52 +40,25 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemSelectedListener;
 
+/**
+ * main application activity
+ * 
+ * @author khinds
+ */
 public class MainActivity extends ActionBarActivity {
 
 	protected Location currentLocation;
-	protected String lat_deg;
-	protected String lat_min;
-	protected String lon_deg;
-	protected String lon_min;
-	protected String lat_sign;
-	protected String lon_sign;
-	protected String tz_sign;
-	protected String tz;
-	protected int year;
-	protected int month;
-	protected int day;
-	protected java.text.DateFormat dateFormat;
-	protected java.text.DateFormat timeFormat;
-	protected String dateFormattedLocally;
-	protected String timeFormattedLocally;
-	protected String rightNowDate;
 	protected String completeForecast;
 	protected Drawable earthViewImage;
 	protected Drawable sunViewImage;
 	protected Drawable moonViewImage;
-	protected Document html;
 	public ArrayList<String> astroData;
-	private URL usnoURL;
-	private URL forcastURL;
-	protected String currentLanguageCode;
-	protected String currentCountryCode;
-	protected boolean useCelsius = true;
 	protected String finalAddress;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		// get current language code
-		currentLanguageCode = getResources().getConfiguration().locale.getLanguage();
-		currentCountryCode = getResources().getConfiguration().locale.getCountry();
-
-		// set the variable if we need to NOT use celsius
-		String[] nonCelsiusCountries = { "BS", "BZ", "KY", "PW", "US", "PR", "GU", "VI" };
-		if (Arrays.asList(nonCelsiusCountries).contains(currentCountryCode)) {
-			useCelsius = false;
-		}
 
 		// handle the spinner for the earth view changer
 		Spinner earthViewsSpinner = (Spinner) findViewById(R.id.earthViewsSpinner);
@@ -98,81 +68,18 @@ public class MainActivity extends ActionBarActivity {
 		Spinner sunViewsSpinner = (Spinner) findViewById(R.id.sunViewsSpinner);
 		sunViewsSpinner.setOnItemSelectedListener(new CustomOnItemSelectedListenerSun());
 
-		// get current date time / location and update the UI with it
-		getCurrentDateTime();
-		getCurrentLocation();
-
-		// get the current moon
-		Date currentDate = new java.util.Date();
-		long timestamp = currentDate.getTime();
-		URL moonURL = null;
-		try {
-			moonURL = new URL("http://space.kevinhinds.net/moon.jpg?" + Long.toString(timestamp));
-		} catch (Exception e) {
-		}
-		new GetMoonImageTask().execute(moonURL);
-	}
-
-	/**
-	 * get current date and time, additionally get the locally formatted date and time to display
-	 */
-	protected void getCurrentDateTime() {
-
-		dateFormat = android.text.format.DateFormat.getDateFormat(this);
-		timeFormat = android.text.format.DateFormat.getTimeFormat(this);
-		rightNowDate = (DateFormat.format("MM-dd-yyyy", new java.util.Date()).toString());
-
-		String rightNow = (DateFormat.format("MM-dd-yyyy HH:mm", new java.util.Date()).toString());
-		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm", java.util.Locale.getDefault());
-		Date rightNowDateTime = null;
-		try {
-			rightNowDateTime = sdf.parse(rightNow);
-		} catch (Exception e) {
-		}
-		dateFormattedLocally = dateFormat.format(rightNowDateTime);
-		timeFormattedLocally = timeFormat.format(rightNowDateTime);
-
 		// update the date time field on the UI
 		TextView currentDateTime = (TextView) findViewById(R.id.currentDateTime);
-		currentDateTime.setText(dateFormattedLocally + " " + timeFormattedLocally);
-	}
+		currentDateTime.setText(Localized.getCurrentDateTime(this));
 
-	/**
-	 * get current location of the user
-	 */
-	protected void getCurrentLocation() {
-
-		// Acquire a reference to the system Location Manager
-		LocationManager locationManager = (LocationManager) this.getSystemService(MainActivity.LOCATION_SERVICE);
-
-		// Define a listener that responds to location updates
-		LocationListener locationListener = new LocationListener() {
-			public void onLocationChanged(Location location) {
-				currentLocation = location;
-				try {
-					updateUIWithLocationFound();
-				} catch (Exception e) {
-				}
-			}
-
-			public void onStatusChanged(String provider, int status, Bundle extras) {
-			}
-
-			public void onProviderEnabled(String provider) {
-			}
-
-			public void onProviderDisabled(String provider) {
-			}
-		};
-
-		// Register the listener with the Location Manager to receive location updates
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-		currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		locationManager.removeUpdates(locationListener);
+		// get the current moon
 		try {
-			updateUIWithLocationFound();
+			new GetMoonImageTask().execute(new URL("http://space.kevinhinds.net/moon.jpg?" + Long.toString(new java.util.Date().getTime())));
 		} catch (Exception e) {
 		}
+		LocationManager locationManager = (LocationManager) this.getSystemService(MainActivity.LOCATION_SERVICE);
+		currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		updateUIWithLocationFound();
 	}
 
 	/**
@@ -180,69 +87,10 @@ public class MainActivity extends ActionBarActivity {
 	 */
 	protected void updateUIWithLocationFound() {
 
-		String latitudeInfo = Location.convert(currentLocation.getLatitude(), Location.FORMAT_MINUTES);
-		String longitudeInfo = Location.convert(currentLocation.getLongitude(), Location.FORMAT_MINUTES);
-		String[] latitudeInfoParts = latitudeInfo.split(":");
-		String[] longitudeInfoParts = longitudeInfo.split(":");
+		new GetAstroDataTask().execute(APIs.getUSNOURLByLocation(currentLocation));
+		new GetWeatherDataTask().execute(APIs.getForecastURLByLocation(currentLocation, getResources().getConfiguration().locale.getLanguage()));
 
-		// get latitude degrees with sign
-		lat_sign = "1";
-		int latDegrees = Integer.parseInt(latitudeInfoParts[0]);
-		if (latDegrees < 0) {
-			lat_sign = "-1";
-			latDegrees = Math.abs(latDegrees);
-		}
-		lat_deg = Integer.toString(latDegrees);
-
-		// get latitude minutes
-		int latMinutes = (int) Math.floor(Double.parseDouble(latitudeInfoParts[1]));
-		lat_min = Integer.toString(latMinutes);
-
-		// get longitude degrees with sign
-		lon_sign = "1";
-		int lonDegrees = Integer.parseInt(longitudeInfoParts[0]);
-		if (lonDegrees < 0) {
-			lon_sign = "-1";
-			lonDegrees = Math.abs(lonDegrees);
-		}
-		lon_deg = Integer.toString(lonDegrees);
-
-		// get longitude minutes
-		int lonMinutes = (int) Math.floor(Double.parseDouble(longitudeInfoParts[1]));
-		lon_min = Integer.toString(lonMinutes);
-
-		TimeZone tzone = TimeZone.getDefault();
-		Calendar cal = GregorianCalendar.getInstance(tzone);
-		int offsetInMillis = tzone.getOffset(cal.getTimeInMillis());
-
-		String offset = String.format("%02d", Math.abs(offsetInMillis / 3600000), Math.abs((offsetInMillis / 60000) % 60));
-		int offsetAmount = Integer.parseInt(offset);
-		tz = String.valueOf(offsetAmount);
-		tz_sign = (offsetInMillis >= 0 ? "+" : "-");
-		tz_sign = tz_sign + "1";
-
-		// get current date
-		year = cal.get(Calendar.YEAR);
-		month = cal.get(Calendar.MONTH);
-		month = month + 1;
-		day = cal.get(Calendar.DAY_OF_MONTH);
-
-		// get USNO URL and background task to obtain the data
-		usnoURL = null;
 		try {
-			usnoURL = new URL(
-					"http://aa.usno.navy.mil/rstt/onedaytable?ID=AA&year=" + Integer.toString(year) + "&month=" + Integer.toString(month) + "&day=" + Integer.toString(day) + "&place=&lon_sign="
-							+ lon_sign + "&lon_deg=" + lon_deg + "&lon_min=" + lon_min + "&lat_sign=" + lat_sign + "&lat_deg=" + lat_deg + "&lat_min=" + lat_min + "&tz=" + tz + "&tz_sign=" + tz_sign);
-		} catch (Exception e1) {
-		}
-		new GetAstroDataTask().execute(usnoURL);
-
-		// get current forecast and estimated location
-		forcastURL = null;
-		try {
-
-			forcastURL = new URL("http://weather.api.kevinhinds.net/?lat=" + currentLocation.getLatitude() + "&lon=" + currentLocation.getLongitude() + "&lang=" + currentLanguageCode);
-
 			// get current user address
 			Geocoder geoCoder = new Geocoder(this, Locale.getDefault());
 			StringBuilder builder = new StringBuilder();
@@ -264,10 +112,6 @@ public class MainActivity extends ActionBarActivity {
 			moonAddressLine.setText(finalAddress);
 		} catch (Exception e1) {
 		}
-		new GetWeatherDataTask().execute(forcastURL);
-
-		// setup the spinner to have an onclick listener for the earth views selection
-		getPlanetImageByName("moon");
 	}
 
 	/**
@@ -301,136 +145,11 @@ public class MainActivity extends ActionBarActivity {
 				br.close();
 			} catch (Exception e) {
 			}
-
 			try {
-				JSONObject weatherReader = new JSONObject(weatherOutput);
-				JSONObject currently = (JSONObject) weatherReader.get("currently");
-				String currentlySummary = (String) currently.get("summary");
-
-				// temp and apparent temp
-				completeForecast = "Temp: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("temperature").toString()));
-				completeForecast = completeForecast + " / Feels Like: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("apparentTemperature").toString()));
-
-				// humidity and dew point
-				Double humidity = (double) Math.round(Double.parseDouble(currently.get("humidity").toString()) * 100);
-				completeForecast = completeForecast + "\n\nHumidity: " + Double.toString(humidity) + "%";
-				completeForecast = completeForecast + " / Dew Point: " + convertFahrenheitToCelcius(Double.parseDouble(currently.get("dewPoint").toString()));
-
-				// wind speed and bearing
-				completeForecast = completeForecast + "\n\nWind Speed: " + convertMPHtoCelcius(Double.parseDouble(currently.get("windSpeed").toString()));
-				completeForecast = completeForecast + " / Bearing: " + convertDegreesToDirection(Double.parseDouble(currently.get("windBearing").toString()));
-
-				// cloud cover
-				Double cloudCover = (double) Math.round(Double.parseDouble(currently.get("cloudCover").toString()) * 100);
-				completeForecast = completeForecast + " \n\nCloud Cover: " + Double.toString(cloudCover) + "%";
-
-				// pressure and ozone
-				completeForecast = completeForecast + "\n\nAir Pressure: " + Double.parseDouble(currently.get("pressure").toString());
-				completeForecast = completeForecast + " / Ozone (O3): " + Double.parseDouble(currently.get("ozone").toString());
-
-				// get minutely summary, catch if missing
-				String minutelySummary = "";
-				try {
-					JSONObject minutely = (JSONObject) weatherReader.get("minutely");
-					minutelySummary = (String) minutely.get("summary");
-				} catch (Exception e) {
-				}
-
-				// get hourly summary, catch if missing
-				String hourlySummary = "";
-				try {
-					JSONObject hourly = (JSONObject) weatherReader.get("hourly");
-					hourlySummary = (String) hourly.get("summary");
-				} catch (Exception e) {
-				}
-
-				// get daily summary, catch if missing
-				String dailySummary = "";
-				try {
-					JSONObject daily = (JSONObject) weatherReader.get("daily");
-					dailySummary = (String) daily.get("summary");
-				} catch (Exception e) {
-				}
-				completeForecast = completeForecast + "\n\n" + currentlySummary + " \n\n" + minutelySummary + " \n\n" + hourlySummary + " \n\n" + dailySummary;
-
+				completeForecast = APIs.getForecastFromAPIData(weatherOutput, Localized.useCelsius(getResources().getConfiguration().locale.getCountry()));
 			} catch (Exception e) {
-				String kevin = "kevin";
 			}
 			return null;
-		}
-
-		/**
-		 * convert the current bearning angle to compass direction
-		 * 
-		 * @param windBearing
-		 * @return
-		 */
-		private String convertDegreesToDirection(Double windBearing) {
-			if (windBearing > 348.75 || windBearing <= 11.25) {
-				return "N";
-			}
-			if (windBearing > 11.25 && windBearing <= 33.75) {
-				return "NNE";
-			}
-			if (windBearing > 33.75 && windBearing <= 56.25) {
-				return "NE";
-			}
-			if (windBearing > 56.25 && windBearing <= 78.75) {
-				return "ENE";
-			}
-			if (windBearing > 78.75 && windBearing <= 101.25) {
-				return "E";
-			}
-			if (windBearing > 101.25 && windBearing <= 123.75) {
-				return "ESE";
-			}
-			if (windBearing > 123.75 && windBearing <= 146.25) {
-				return "SE";
-			}
-			if (windBearing > 146.25 && windBearing <= 168.75) {
-				return "SSE";
-			}
-			if (windBearing > 168.75 && windBearing <= 191.25) {
-				return "S";
-			}
-			if (windBearing > 191.25 && windBearing <= 213.75) {
-				return "SSW";
-			}
-			if (windBearing > 213.75 && windBearing <= 236.25) {
-				return "SW";
-			}
-			if (windBearing > 236.25 && windBearing <= 258.75) {
-				return "WSW";
-			}
-			if (windBearing > 258.75 && windBearing <= 281.25) {
-				return "W";
-			}
-			if (windBearing > 281.25 && windBearing <= 303.75) {
-				return "WNW";
-			}
-			if (windBearing > 303.75 && windBearing <= 326.25) {
-				return "NW";
-			}
-			if (windBearing > 326.25 && windBearing <= 348.75) {
-				return "NNW";
-			}
-			return null;
-		}
-
-		// Converts to celcius unless the flag is set otherwise
-		private String convertMPHtoCelcius(Double mph) {
-			if (!useCelsius) {
-				return Double.toString(Math.round(mph)) + " mph";
-			}
-			return Double.toString(Math.round(mph * 1.609344)) + " kph";
-		}
-
-		// Converts to celcius unless the flag is set otherwise
-		private String convertFahrenheitToCelcius(Double fahrenheit) {
-			if (!useCelsius) {
-				return Double.toString(Math.round(fahrenheit)) + " *F";
-			}
-			return Double.toString(Math.round(((fahrenheit - 32) * 5 / 9))) + " *C";
 		}
 	}
 
@@ -498,7 +217,6 @@ public class MainActivity extends ActionBarActivity {
 				}
 				getPlanetImageByName(imageName);
 			}
-
 		}
 
 		@Override
@@ -678,50 +396,27 @@ public class MainActivity extends ActionBarActivity {
 
 		@Override
 		protected Long doInBackground(URL... params) {
-
-			// get USNO data from Jsoup
-			try {
-				html = Jsoup.connect(params[0].toString()).get();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			// create array list of astroData for
-			astroData = new ArrayList<String>();
-			Element table = html.select("table").get(1);
-			Elements rows = table.select("tr");
-			for (int i = 1; i < rows.size(); i++) {
-				Element row = rows.get(i);
-				Elements cols = row.select("td");
-				try {
-					astroData.add(cols.get(1).html());
-				} catch (Exception e) {
-				}
-			}
-
-			Elements paragraphTag = html.select("p");
-			astroData.add(paragraphTag.get(1).html());
-			astroData.add(paragraphTag.get(2).html());
+			// get USNO data from Jsoup and create astroData array
+			astroData = APIs.parseUSNODataByURL(params);
 			return null;
 		}
 	}
 
 	/**
-	 * convert a raw time from USNO to a localized time per the user's personal locale settings
+	 * This method converts dp unit to equivalent pixels, depending on device density.
 	 * 
-	 * @param rawTime
-	 * @return
+	 * @param dp
+	 *            A value in dp (density independent pixels) unit. Which we need to convert into
+	 *            pixels
+	 * @param context
+	 *            Context to get resources and device specific display metrics
+	 * @return A float value to represent px equivalent to dp depending on device density
 	 */
-	public String localizedTime(String rawTime) {
-		String rawTimeConverted = rightNowDate + " " + rawTime;
-		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm", java.util.Locale.getDefault());
-		Date rightNowDateTime = null;
-		try {
-			rightNowDateTime = sdf.parse(rawTimeConverted);
-		} catch (Exception e) {
-		}
-		rawTime = timeFormat.format(rightNowDateTime);
-		return rawTime;
+	public static float convertDpToPixel(float dp, Context context) {
+		Resources resources = context.getResources();
+		DisplayMetrics metrics = resources.getDisplayMetrics();
+		float px = dp * (metrics.densityDpi / 160f);
+		return px;
 	}
 
 	/**
@@ -729,41 +424,44 @@ public class MainActivity extends ActionBarActivity {
 	 */
 	public void updateUSNOFields() {
 
+		// get current date time / location and update the UI with it
+		String rightNowDate = (DateFormat.format("MM-dd-yyyy", new java.util.Date()).toString());
+
 		TextView sunBeginCivilTwilightTextTime = (TextView) findViewById(R.id.sunBeginCivilTwilightTextTime);
-		sunBeginCivilTwilightTextTime.setText(localizedTime(astroData.get(0)));
+		sunBeginCivilTwilightTextTime.setText(Localized.localizedTime(astroData.get(0), MainActivity.this, rightNowDate));
 
 		TextView sunriseTextTime = (TextView) findViewById(R.id.sunriseTextTime);
-		sunriseTextTime.setText(localizedTime(astroData.get(1)));
+		sunriseTextTime.setText(Localized.localizedTime(astroData.get(1), MainActivity.this, rightNowDate));
 
 		TextView sunTransitTextTime = (TextView) findViewById(R.id.sunTransitTextTime);
-		sunTransitTextTime.setText(localizedTime(astroData.get(2)));
+		sunTransitTextTime.setText(Localized.localizedTime(astroData.get(2), MainActivity.this, rightNowDate));
 
 		TextView sunsetTextTime = (TextView) findViewById(R.id.sunsetTextTime);
-		sunsetTextTime.setText(localizedTime(astroData.get(3)));
+		sunsetTextTime.setText(Localized.localizedTime(astroData.get(3), MainActivity.this, rightNowDate));
 
 		TextView civilTwilightTextTime = (TextView) findViewById(R.id.civilTwilightTextTime);
-		civilTwilightTextTime.setText(localizedTime(astroData.get(4)));
+		civilTwilightTextTime.setText(Localized.localizedTime(astroData.get(4), MainActivity.this, rightNowDate));
 
 		TextView moonRiseTime = (TextView) findViewById(R.id.moonRiseTime);
-		moonRiseTime.setText(localizedTime(astroData.get(5)));
+		moonRiseTime.setText(Localized.localizedTime(astroData.get(5), MainActivity.this, rightNowDate));
 
 		TextView moonTransitTextTime = (TextView) findViewById(R.id.moonTransitTextTime);
-		moonTransitTextTime.setText(localizedTime(astroData.get(6)));
+		moonTransitTextTime.setText(Localized.localizedTime(astroData.get(6), MainActivity.this, rightNowDate));
 
 		TextView moonsetTextTime = (TextView) findViewById(R.id.moonsetTextTime);
-		moonsetTextTime.setText(localizedTime(astroData.get(7)));
+		moonsetTextTime.setText(Localized.localizedTime(astroData.get(7), MainActivity.this, rightNowDate));
 
-		// try catch the next astroData 9 and 10 indexes, they throw exceptions if null
+		// try catch the next astroData 8 and 9 indexes, they throw exceptions if null
 		try {
 			TextView moonDescription1 = (TextView) findViewById(R.id.moonDescription1);
-			if (astroData.get(9) != null && !astroData.get(9).contains("<a href=")) {
-				moonDescription1.setText(astroData.get(9));
+			if (astroData.get(8) != null && !astroData.get(8).contains("<a href=")) {
+				moonDescription1.setText(astroData.get(8));
 			} else {
 				moonDescription1.setText("");
 			}
 			TextView moonDescription2 = (TextView) findViewById(R.id.moonDescription2);
-			if (astroData.get(10) != null && !astroData.get(10).contains("<a href=")) {
-				moonDescription2.setText(astroData.get(10));
+			if (astroData.get(9) != null && !astroData.get(9).contains("<a href=")) {
+				moonDescription2.setText(astroData.get(9));
 			} else {
 				moonDescription2.setText("");
 			}
