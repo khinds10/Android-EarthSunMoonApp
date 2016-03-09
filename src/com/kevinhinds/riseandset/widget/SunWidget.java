@@ -31,19 +31,19 @@ import android.text.format.DateFormat;
 import android.widget.RemoteViews;
 
 /**
- * create the basic MoonWidget widget that will use a service call in a separate thread to update
- * the widget elements
+ * create the basic SunWidget widget that will use a service call in a separate thread to update the
+ * widget elements
  * 
  * @author khinds
  */
-public class MoonWidget extends AppWidgetProvider {
+public class SunWidget extends AppWidgetProvider {
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
 		// to avoid the ANR "application not responding" error request update for these widgets and
 		// launch updater service via a new thread
-		appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, MoonWidget.class));
+		appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, SunWidget.class));
 		UpdateService.requestUpdate(appWidgetIds);
 		context.startService(new Intent(context, UpdateService.class));
 	}
@@ -75,16 +75,16 @@ public class MoonWidget extends AppWidgetProvider {
 		String timeStamp = Integer.toString(randomInt);
 
 		// update the widget UI elments based on on the current situation
-		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.moon_widget);
+		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.sun_widget);
 
 		// update widget based on how the internet connectivity is
 		if (!isConnected) {
-			views.setTextViewText(R.id.moonWidgetLastUpdate, "No Connection");
+			views.setTextViewText(R.id.sunWidgetLastUpdate, "No Connection");
 		} else {
-			// get the moon live image from the online location
+			// get the sun live image from the online location
 			InputStream is = null;
 			try {
-				is = fetch("http://space.kevinhinds.net/moon.jpg?" + timeStamp);
+				is = fetch("http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg?" + timeStamp);
 			} catch (Exception e) {
 			}
 
@@ -94,37 +94,24 @@ public class MoonWidget extends AppWidgetProvider {
 			int widgetImageWidthToPixel = (int) MainActivity.convertDpToPixel(200, context);
 			int widgetImageHeightToPixel = (int) MainActivity.convertDpToPixel(200, context);
 			resizedbitmap = Bitmap.createScaledBitmap(bm, widgetImageWidthToPixel, widgetImageHeightToPixel, true);
-			views.setImageViewBitmap(R.id.moonViewWidget, resizedbitmap);
-			views.setTextViewText(R.id.moonWidgetLastUpdate, "LIVE MOON [" + Localized.getCurrentDateTime(context) + "]");
+			views.setImageViewBitmap(R.id.sunWidgetView, resizedbitmap);
+			views.setTextViewText(R.id.sunWidgetLastUpdate, "LIVE SUN [" + Localized.getCurrentDateTime(context) + "]");
 
-			// set moon current data from location found
+			// set sun current data from location found
 			LocationManager locationManager = (LocationManager) context.getSystemService(MainActivity.LOCATION_SERVICE);
 			Location currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 			astroData = APIs.parseUSNODataByURL(APIs.getUSNOURLByLocation(currentLocation));
-			views.setTextViewText(R.id.moonRiseTime, Localized.localizedTime(astroData.get(5), context, rightNowDate));
-			views.setTextViewText(R.id.moonTransitTextTime, Localized.localizedTime(astroData.get(6), context, rightNowDate));
-			views.setTextViewText(R.id.moonsetTextTime, Localized.localizedTime(astroData.get(7), context, rightNowDate));
-
-			String moonDescription = "";
-			try {
-				if (astroData.get(8) != null && !astroData.get(8).contains("<a href=")) {
-					moonDescription = astroData.get(8);
-				}
-				if (astroData.get(9) != null && !astroData.get(9).contains("<a href=")) {
-					moonDescription = astroData.get(9);
-				}
-				if (astroData.get(8) != null && !astroData.get(8).contains("<a href=") && astroData.get(9) != null && !astroData.get(9).contains("<a href=")) {
-					moonDescription = astroData.get(8) + ". " + astroData.get(9);
-				}
-				views.setTextViewText(R.id.moonDescription, moonDescription);
-			} catch (Exception e) {
-			}
+			views.setTextViewText(R.id.sunBeginCivilTwilightTextTime, Localized.localizedTime(astroData.get(0), context, rightNowDate));
+			views.setTextViewText(R.id.sunriseTextTime, Localized.localizedTime(astroData.get(1), context, rightNowDate));
+			views.setTextViewText(R.id.sunTransitTextTime, Localized.localizedTime(astroData.get(2), context, rightNowDate));
+			views.setTextViewText(R.id.sunsetTextTime, Localized.localizedTime(astroData.get(3), context, rightNowDate));
+			views.setTextViewText(R.id.civilTwilightTextTime, Localized.localizedTime(astroData.get(4), context, rightNowDate));
 		}
 
 		// apply an intent to the widget as a whole to launch the MainActivity
 		Intent intent = new Intent(context, MainActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-		views.setOnClickPendingIntent(R.id.moonWidgetContainer, pendingIntent);
+		views.setOnClickPendingIntent(R.id.sunWidgetContainer, pendingIntent);
 		return views;
 	}
 

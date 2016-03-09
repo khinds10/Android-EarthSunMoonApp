@@ -32,17 +32,21 @@ public class UpdateService extends Service implements Runnable {
 	private static Object sLock = new Object();
 
 	/**
-	 * Flag if there is an update thread already running. We only launch a new thread if one isn't already running.
+	 * Flag if there is an update thread already running. We only launch a new thread if one isn't
+	 * already running.
 	 */
 	private static boolean sThreadRunning = false;
 
 	/**
-	 * Internal queue of requested widget updates. You <b>must</b> access through {@link #requestUpdate(int[])} or {@link #getNextUpdate()} to make sure your access is correctly synchronized.
+	 * Internal queue of requested widget updates. You <b>must</b> access through
+	 * {@link #requestUpdate(int[])} or {@link #getNextUpdate()} to make sure your access is
+	 * correctly synchronized.
 	 */
 	private static Queue<Integer> sAppWidgetIds = new LinkedList<Integer>();
 
 	/**
-	 * Request updates for the given widgets. Will only queue them up, you are still responsible for starting a processing thread if needed, usually by starting the parent service.
+	 * Request updates for the given widgets. Will only queue them up, you are still responsible for
+	 * starting a processing thread if needed, usually by starting the parent service.
 	 */
 	public static void requestUpdate(int[] appWidgetIds) {
 		synchronized (sLock) {
@@ -53,8 +57,9 @@ public class UpdateService extends Service implements Runnable {
 	}
 
 	/**
-	 * Peek if we have more updates to perform. This method is special because it assumes you're calling from the update thread, and that you will terminate if no updates remain. (It atomically resets
-	 * {@link #sThreadRunning} when none remain to prevent race conditions.)
+	 * Peek if we have more updates to perform. This method is special because it assumes you're
+	 * calling from the update thread, and that you will terminate if no updates remain. (It
+	 * atomically resets {@link #sThreadRunning} when none remain to prevent race conditions.)
 	 */
 	private static boolean hasMoreUpdates() {
 		synchronized (sLock) {
@@ -80,8 +85,9 @@ public class UpdateService extends Service implements Runnable {
 	}
 
 	/**
-	 * Start this service, creating a background processing thread, if not already running. If started with {@link #ACTION_UPDATE_ALL}, will automatically add all widgets to the requested update
-	 * queue.
+	 * Start this service, creating a background processing thread, if not already running. If
+	 * started with {@link #ACTION_UPDATE_ALL}, will automatically add all widgets to the requested
+	 * update queue.
 	 */
 	@Override
 	public void onStart(Intent intent, int startId) {
@@ -90,7 +96,7 @@ public class UpdateService extends Service implements Runnable {
 		AppWidgetManager manager = AppWidgetManager.getInstance(this);
 		requestUpdate(manager.getAppWidgetIds(new ComponentName(this, MoonWidget.class)));
 
-		/** Only start processing thread if not already running */
+		// Only start processing thread if not already running
 		synchronized (sLock) {
 			if (!sThreadRunning) {
 				sThreadRunning = true;
@@ -100,7 +106,8 @@ public class UpdateService extends Service implements Runnable {
 	}
 
 	/**
-	 * Main thread for running through any requested widget updates until none remain. Also sets alarm to perform next update.
+	 * Main thread for running through any requested widget updates until none remain. Also sets
+	 * alarm to perform next update.
 	 */
 	public void run() {
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
@@ -109,27 +116,25 @@ public class UpdateService extends Service implements Runnable {
 			int appWidgetId = getNextUpdate();
 			Uri appWidgetUri = ContentUris.withAppendedId(AppWidgets.CONTENT_URI, appWidgetId);
 
-			/** Process this update through the correct provider */
+			// Process this update through the correct provider
 			AppWidgetProviderInfo info = appWidgetManager.getAppWidgetInfo(appWidgetId);
 			String providerName = info.provider.getClassName();
 			RemoteViews updateViews = null;
 
-			/** based on providerName update the correct widget */
+			// based on providerName update the correct widget
 			if (providerName.equals(MoonWidget.class.getName())) {
 				updateViews = MoonWidget.buildUpdate(this, appWidgetUri);
-			} 
-			
-			// else if (providerName.equals(MoonSmallWidget.class.getName())) {
-				// updateViews = MoonSmallWidget.buildUpdate(this, appWidgetUri);
-			// }
-		
-			/** Push this update to surface */
+			} else if (providerName.equals(SunWidget.class.getName())) {
+				updateViews = SunWidget.buildUpdate(this, appWidgetUri);
+			}
+
+			// Push this update to surface
 			if (updateViews != null) {
 				appWidgetManager.updateAppWidget(appWidgetId, updateViews);
 			}
 		}
 
-		/** No updates remaining, so stop service */
+		// No updates remaining, so stop service
 		stopSelf();
 	}
 
