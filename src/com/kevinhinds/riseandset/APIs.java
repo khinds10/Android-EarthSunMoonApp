@@ -84,7 +84,7 @@ public class APIs {
 			String dailySummary = "";
 			JSONObject daily = (JSONObject) weatherReader.get("daily");
 			dailySummary = (String) daily.get("summary");
-			completeForecast = completeForecast + "\n\n" + currentlySummary + " \n\n" + minutelySummary + " \n\n" + hourlySummary + " \n\n" + dailySummary;
+			completeForecast = completeForecast + "\n\n" + currentlySummary + " - " + minutelySummary + " - " + hourlySummary + "  - " + dailySummary;
 		} catch (Exception e) {
 		}
 		return completeForecast;

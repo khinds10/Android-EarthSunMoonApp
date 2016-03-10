@@ -126,6 +126,10 @@ public class UpdateService extends Service implements Runnable {
 				updateViews = MoonWidget.buildUpdate(this, appWidgetUri);
 			} else if (providerName.equals(SunWidget.class.getName())) {
 				updateViews = SunWidget.buildUpdate(this, appWidgetUri);
+			} else if (providerName.equals(EarthWidget.class.getName())) {
+				updateViews = EarthWidget.buildUpdate(this, appWidgetUri);
+			} else if (providerName.equals(EarthWeatherWidget.class.getName())) {
+				updateViews = EarthWeatherWidget.buildUpdate(this, appWidgetUri);
 			}
 
 			// Push this update to surface

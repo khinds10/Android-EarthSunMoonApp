@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/earthWidgetContainer"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/widget"
+    android:orientation="vertical"
+    android:padding="10dp" >
+
+    <ImageView
+        android:id="@+id/earthWidgetView"
+        android:layout_width="fill_parent"
+        android:layout_height="195dp"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/earth" />
+
+    <TextView
+        android:id="@+id/earthWidgetLastUpdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:paddingBottom="5dp"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:typeface="sans" />
+
+    <TextView
+        android:id="@+id/earthForecast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:paddingBottom="5dp"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:typeface="sans" />
+
+</LinearLayout>
