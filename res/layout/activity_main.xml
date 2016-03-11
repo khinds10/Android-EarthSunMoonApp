@@ -12,7 +12,8 @@
     <ScrollView
         android:id="@+id/completeLayout"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:paddingBottom="0dp" >
 
         <LinearLayout
             android:id="@+id/mainView"
@@ -674,12 +675,21 @@
         </LinearLayout>
     </ScrollView>
 
-    <RelativeLayout
-        android:id="@+id/adViewContainer"
+    <LinearLayout
+        android:id="@+id/adContainerLayout"
         android:layout_width="fill_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical" 
-        android:gravity="center_horizontal">
-    </RelativeLayout>
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical" >
+
+        <RelativeLayout
+            android:id="@+id/adViewContainer"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical" >
+        </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>

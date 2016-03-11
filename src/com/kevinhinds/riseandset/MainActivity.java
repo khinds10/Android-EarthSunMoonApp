@@ -98,7 +98,7 @@ public class MainActivity extends ActionBarActivity {
 		// Look up the AdView as a resource and load a request
 		if (Boolean.parseBoolean(getResources().getString(R.string.admob_enabled))) {
 
-			// setup the adMob Ad 
+			// setup the adMob Ad
 			AdView adView = new AdView(this);
 			adView.setAdUnitId(getResources().getString(R.string.admob_ads_id));
 			adView.setAdSize(AdSize.BANNER);
@@ -109,7 +109,6 @@ public class MainActivity extends ActionBarActivity {
 			AdRequest adRequest = new AdRequest.Builder().build();
 			adView.loadAd(adRequest);
 		}
-
 	}
 
 	/**
@@ -351,7 +350,7 @@ public class MainActivity extends ActionBarActivity {
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 		if (Boolean.parseBoolean(getResources().getString(R.string.pollfish_enabled))) {
-			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_RIGHT, 5);
+			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_RIGHT, 75);
 		}
 	}
 
@@ -359,7 +358,7 @@ public class MainActivity extends ActionBarActivity {
 	public void onResume() {
 		super.onResume();
 		if (Boolean.parseBoolean(getResources().getString(R.string.pollfish_enabled))) {
-			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_LEFT, 5);
+			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_RIGHT, 75);
 		}
 	}
 
