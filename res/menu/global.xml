@@ -1,10 +1,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" >
-
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.kevinhinds.riseandset.MainActivity" >
+        
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_bitstreet"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+        android:title="@string/menu_bitstreet"/>
+    <item
+        android:id="@+id/menu_fullversion"
+        android:orderInCategory="100"
+        android:title="@string/menu_fullversion"/>
+    <item
+        android:id="@+id/menu_suggested"
+        android:orderInCategory="100"
+        android:title="@string/suggested_app_menu"/>
 
 </menu>

@@ -674,4 +674,12 @@
         </LinearLayout>
     </ScrollView>
 
+    <RelativeLayout
+        android:id="@+id/adViewContainer"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" 
+        android:gravity="center_horizontal">
+    </RelativeLayout>
+
 </RelativeLayout>

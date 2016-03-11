@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Application Name -->
+    <string name="app_name">Earth, Sun and Moon</string>
+
+    <!-- Freemium Config -->
+    <string name="is_full_version">false</string>
+    <string name="app_full_version_package">com.kevinhinds.riseandset</string>
+
+    <!-- (Not deploying to Google? you need the special pollfish JAR) -->
+    <string name="marketplace_name">Google</string> <!-- Amazon|Nook|Google -->
+
+    <!-- PollFish -->
+    <string name="pollfish_enabled">true</string>
+    <string name="pollfish_api_key">e2b7af3e-3a36-499f-8c28-455c85262bf8</string>
+
+    <!-- AdsMob -->
+    <string name="admob_enabled">true</string>
+    <string name="admob_ads_id">ca-app-pub-6863280069736596/6286121047</string>
+
+    <!-- AppJolt -->
+    <string name="appjolt_enabled">true</string>
+
+    <!-- Suggested App Package -->
+    <string name="has_suggested_app">true</string>
+    <string name="suggested_app_menu">New Free App!</string>
+    <string name="suggested_app_package">com.kevinhinds.dontforgetfree</string>
+
+    <!-- Example: Latest Updates\n\nItem #1\nItem #2\n\nThanks for downloading! -->
+    <string name="latest_update_notes">Latest Updates\n\nfully internationalized date and time data\n4 new full sized widgets\nLive Sun Solar Dynamics Observatory Images\nLive Earth DSCOVR:EPIC Images\n\nThanks for downloading!</string>
+
+    <!-- Freemium Standard Config -->
+    <string name="app_publisher_name">Kevin Hinds</string>
+    <string name="app_publisher_package">com.kevinhinds</string>
+    <string name="menu_bitstreet">Bitstreet Apps</string>
+    <string name="menu_fullversion">Ads Free Version</string>
+    <string name="device_nook_ean_number">1234567890</string>
+
+</resources>

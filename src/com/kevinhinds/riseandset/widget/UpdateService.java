@@ -89,6 +89,7 @@ public class UpdateService extends Service implements Runnable {
 	 * started with {@link #ACTION_UPDATE_ALL}, will automatically add all widgets to the requested
 	 * update queue.
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);

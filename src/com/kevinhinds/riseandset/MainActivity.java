@@ -5,6 +5,19 @@ import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
+import com.pollfish.main.PollFish;
+import com.pollfish.constants.Position;
+import com.kevinhinds.riseandset.marketplace.MarketPlace;
+import com.kevinhinds.riseandset.updates.LatestUpdates;
+import com.google.android.gms.ads.*;
+import com.appjolt.winback.Winback;
+
+import android.os.Bundle;
+import android.content.res.Configuration;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.RelativeLayout;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -26,9 +39,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -76,6 +86,30 @@ public class MainActivity extends ActionBarActivity {
 		LocationManager locationManager = (LocationManager) this.getSystemService(MainActivity.LOCATION_SERVICE);
 		currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		updateUIWithLocationFound();
+
+		// Appjolt - Init SDK if it's Enabled
+		if (Boolean.parseBoolean(getResources().getString(R.string.appjolt_enabled))) {
+			Winback.init(this);
+		}
+
+		// show the latest update notes if the application was just installed
+		LatestUpdates.showFirstInstalledNotes(this);
+
+		// Look up the AdView as a resource and load a request
+		if (Boolean.parseBoolean(getResources().getString(R.string.admob_enabled))) {
+
+			// setup the adMob Ad 
+			AdView adView = new AdView(this);
+			adView.setAdUnitId(getResources().getString(R.string.admob_ads_id));
+			adView.setAdSize(AdSize.BANNER);
+
+			// apply it to the bottom of the screen
+			RelativeLayout layout = (RelativeLayout) findViewById(R.id.adViewContainer);
+			layout.addView(adView);
+			AdRequest adRequest = new AdRequest.Builder().build();
+			adView.loadAd(adRequest);
+		}
+
 	}
 
 	/**
@@ -291,11 +325,42 @@ public class MainActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		switch (item.getItemId()) {
+		case R.id.menu_bitstreet:
+			MarketPlace.viewAllPublisherApps(this);
+			break;
+		case R.id.menu_fullversion:
+			MarketPlace.viewPremiumApp(this);
+			break;
+		case R.id.menu_suggested:
+			MarketPlace.viewSuggestedApp(this);
+			break;
 		}
-		return super.onOptionsItemSelected(item);
+		return true;
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		menu.findItem(R.id.menu_fullversion).setVisible(!Boolean.parseBoolean(getResources().getString(R.string.is_full_version)));
+		menu.findItem(R.id.menu_suggested).setVisible(Boolean.parseBoolean(getResources().getString(R.string.has_suggested_app)));
+		return true;
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		if (Boolean.parseBoolean(getResources().getString(R.string.pollfish_enabled))) {
+			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_RIGHT, 5);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		if (Boolean.parseBoolean(getResources().getString(R.string.pollfish_enabled))) {
+			PollFish.init(this, getString(R.string.pollfish_api_key), Position.BOTTOM_LEFT, 5);
+		}
 	}
 
 	/**

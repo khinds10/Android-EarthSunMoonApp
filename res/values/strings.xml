@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Earth, Sun and Moon</string>
-    <string name="title_section1">Earth</string>
-    <string name="title_section2">Sun</string>
-    <string name="title_section3">Moon</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="action_settings">Settings</string>
-
     <string-array name="earth_views_array">
         <item>Most Recent DSCOVR:EPIC Image</item>
         <item>Earth from the Sun</item>
@@ -17,7 +9,6 @@
         <item>Earth from the North Pole</item>
         <item>Earth from the South Pole</item>
     </string-array>
-    
     <string-array name="sun_views_array">
         <item>AIA 193 - Current Outer Atmosphere</item>
         <item>AIA 304 - Current Plasma Filaments &amp; Prominences</item>
@@ -32,7 +23,6 @@
         <item>AIA Composite - Plasma Filaments, Corona, Magentic Loops </item>
         <item>AIA Composite - Extremely Hot, Most Active Atmosphere &amp; Atmosphere </item>
     </string-array>
-    
     <string-array name="sun_views_array_urls">
         <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg</item>
         <item>http://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg</item>

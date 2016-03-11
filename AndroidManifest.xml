@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Appjolt Permissions -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <uses-sdk
         android:minSdkVersion="10"
         android:targetSdkVersion="21" />
@@ -76,6 +79,43 @@
 
         <!-- Service to perform web API queries -->
         <service android:name=".widget.UpdateService" />
+
+        <activity
+            android:name="com.google.android.gms.ads.AdActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <!-- Appjolt -->
+        <!-- Note: For optimal OS version compatibility, please do not change any attributes -->
+
+
+        <!-- Appjolt Activity -->
+        <activity
+            android:name="com.appjolt.winback.AppjoltActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:hardwareAccelerated="false"
+            android:taskAffinity="com.appjolt.winback.twentyeight"
+            android:theme="@android:style/Theme.Panel" />
+
+        <!-- Appjolt Service -->
+        <service
+            android:name="com.appjolt.winback.WinbackService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":appjolt" />
+
+        <!-- Appjolt BOOT receiver -->
+        <receiver
+            android:name="com.appjolt.winback.WinbackBootReceiver"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
